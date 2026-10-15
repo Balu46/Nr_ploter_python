@@ -3,11 +3,6 @@ import nrplotter as nr
 
 
 def f(x: float) -> float:
-    """Równanie: x^3 + x^2 - 3x - 3 = 0
-
-    Analitycznie: (x^2 - 3)(x + 1) = 0, więc pierwiastek w [1.0, 3.0] to
-    sqrt(3) ~= 1.73205...
-    """
     return x**3 + x**2 - 3.0 * x - 3.0
 
 
@@ -28,40 +23,40 @@ def bsect(
 
     history = []
     print(
-        f"{'Iter':<5} | {'a':<10} | {'b':<10} | {'środek (r)':<20} | {'f(r)':<15} | {'szerokość (b-a)':<15}"
+        f"{'Iter':<5} | {'a':<10} | {'b':<10} | {'środek (c)':<20} | {'f(c)':<15} | {'szerokość (b-a)':<15}"
     )
     print("-" * 85)
 
-    r = (a + b) / 2.0
+    c = (a + ((b-a) / 2.0))
     for i in range(1, max_iter + 1):
-        r = (a + b) / 2.0
-        fr = func(r)
+        c = (a + ((b-a) / 2.0))
+        fc = func(c)
         width = b - a
 
         history.append(
-            {"iter": i, "a": a, "b": b, "r": r, "fr": fr, "width": width}
+            {"iter": i, "a": a, "b": b, "c": c, "fr": fc, "width": width}
         )
         print(
-            f"{i:<5} | {a:<10.6f} | {b:<10.6f} | {r:<20.16f} | {fr:<15.6e} | {width:<15.6f}"
+            f"{i:<5} | {a:<10.6f} | {b:<10.6f} | {c:<20.16f} | {fc:<15.6e} | {width:<15.6f}"
         )
 
         # Warunek zbieżności
-        if abs(fr) < tol or (b - a) / 2.0 < tol:
+        if abs(fc) < tol:
             print("-" * 85)
             print(
-                f"Zbieżność osiągnięta w iteracji {i}: r = {r:.16f} (dokładne sqrt(3) = {math.sqrt(3):.16f})"
+                f"Zbieżność osiągnięta w iteracji {i}: r = {c:.16f} (dokładne sqrt(3) = {math.sqrt(3):.16f})"
             )
-            return r, history
+            return c, history
 
-        if fa * fr < 0:
-            b = r
-            fb = fr
+        if fa * fc < 0:
+            b = c
+            fb = fc
         else:
-            a = r
-            fa = fr
+            a = c
+            fa = fc
 
     print("-" * 85)
-    return r, history
+    return c, history
 
 
 def main():
