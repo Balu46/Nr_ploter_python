@@ -37,7 +37,6 @@ def render_matplotlib(
     max_x = x_max if x_max is not None else max(all_xs)
     min_y = y_min if y_min is not None else min(all_ys)
     max_y = y_max if y_max is not None else max(all_ys)
-
     for s in series_list:
         line_style = "-"
         if s.line_type == "dashed":
@@ -45,7 +44,9 @@ def render_matplotlib(
         elif s.line_type == "dotted":
             line_style = ":"
 
-        ax.plot(s.xs, s.ys, label=s.label, color=s.color, linestyle=line_style, linewidth=s.line_thickness)
+        marker = "o" if len(s.xs) == 1 else None
+        markersize = 8 if len(s.xs) == 1 else None
+        ax.plot(s.xs, s.ys, label=s.label, color=s.color, linestyle=line_style, linewidth=s.line_thickness, marker=marker, markersize=markersize)
 
     ax.grid(True)
     ax.set_title(title, fontsize=11, fontweight="bold")
