@@ -1,0 +1,18 @@
+[project]
+name = "metody-numeryczne"
+version = "0.1.0"
+description = "Metody numeryczne - zestaw narzędzi i wykresów w stylu nrPlotter"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "matplotlib>=3.8.0",
+    "numpy>=1.26.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
