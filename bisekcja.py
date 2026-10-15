@@ -2,8 +2,22 @@ import math
 import nrplotter as nr
 
 
-def bsect(func, a: float, b: float, tol: float = 0.001, max_iter: int = 100) -> float:
-    """Metoda bisekcji (równego podziału) znajdująca pierwiastek f(x) = 0 w [a, b]."""
+def f(x: float) -> float:
+    """Równanie: x^3 + x^2 - 3x - 3 = 0
+
+    Analitycznie: (x^2 - 3)(x + 1) = 0, więc pierwiastek w [1.0, 3.0] to
+    sqrt(3) ~= 1.73205...
+    """
+    return x**3 + x**2 - 3.0 * x - 3.0
+
+
+def bsect(
+    func, a: float, b: float, tol: float = 0.001, max_iter: int = 100
+) -> tuple[float, list[dict]]:
+    """Metoda bisekcji poszukująca pierwiastka w przedziale [a, b].
+
+    Zwraca wyznaczony pierwiastek oraz pełną historię kolejnych iteracji.
+    """
     fa = func(a)
     fb = func(b)
 
@@ -12,73 +26,85 @@ def bsect(func, a: float, b: float, tol: float = 0.001, max_iter: int = 100) -> 
             f"Funkcja musi mieć przeciwne znaki na krańcach: f({a})={fa}, f({b})={fb}"
         )
 
-    for i in range(max_iter):
-        mid = (a + b) / 2.0
-        fmid = func(mid)
+    history = []
+    print(
+        f"{'Iter':<5} | {'a':<10} | {'b':<10} | {'środek (r)':<20} | {'f(r)':<15} | {'szerokość (b-a)':<15}"
+    )
+    print("-" * 85)
 
-        # Sprawdzenie warunku stopu
-        if abs(fmid) < tol or (b - a) / 2.0 < tol:
-            print(f"Znaleziono pierwiastek px = {mid:.6f} po {i + 1} iteracjach.")
-            return mid
+    r = (a + b) / 2.0
+    for i in range(1, max_iter + 1):
+        r = (a + b) / 2.0
+        fr = func(r)
+        width = b - a
 
-        if fa * fmid < 0:
-            b = mid
-            fb = fmid
+        history.append(
+            {"iter": i, "a": a, "b": b, "r": r, "fr": fr, "width": width}
+        )
+        print(
+            f"{i:<5} | {a:<10.6f} | {b:<10.6f} | {r:<20.16f} | {fr:<15.6e} | {width:<15.6f}"
+        )
+
+        # Warunek zbieżności
+        if abs(fr) < tol or (b - a) / 2.0 < tol:
+            print("-" * 85)
+            print(
+                f"Zbieżność osiągnięta w iteracji {i}: r = {r:.16f} (dokładne sqrt(3) = {math.sqrt(3):.16f})"
+            )
+            return r, history
+
+        if fa * fr < 0:
+            b = r
+            fb = fr
         else:
-            a = mid
-            fa = fmid
+            a = r
+            fa = fr
 
-    print(f"Osiągnięto limit iteracji. Przybliżony pierwiastek: {mid:.6f}")
-    return (a + b) / 2.0
+    print("-" * 85)
+    return r, history
 
 
 def main():
-    # 1. Zdefiniuj funkcję badaną w zadaniu (np. x^2 - 2, x^3 - x - 2 itp.)
-    # Zmień poniższe wyrażenie na wzór podany w treści zadania na Moodle:
-    f = lambda x: x**2 - 2.0
-
     a, b = 1.0, 3.0
     tol = 0.001
 
-    # 2. Obliczenie pierwiastka metodą bisekcji (odpowiednik bsect w C++)
-    px = bsect(f, a, b, tol)
-    print(f"Wyznaczony punkt: Vertex({px:.4f}, 0.0)")
+    print("=== METODA BISEKCJI DLA RÓWNANIA: x^3 + x^2 - 3x - 3 = 0 ===")
+    print(f"Przedział początkowy: [{a}, {b}], tolerancja: {tol}\n")
 
-    # 3. Przygotowanie serii do wykresu:
-    # a) Wykres ciągły badanej funkcji f(x)
-    xs_func = [0.5 + i * 0.02 for i in range(150)]  # zakres wokół pierwiastka
-    ys_func = [f(x) for x in xs_func]
+    root, history = bsect(f, a, b, tol=tol)
 
-    # b) Wyznaczony punkt (px, 0.0) - odpowiada v w C++ dodawanemu do points_
-    # Wokół px dodajemy mały znacznik/punkt
+    # Przygotowanie wykresu w stylu nrPlotter
+    # Punkty funkcji f(x)
+    xs_curve = [0.8 + i * 0.02 for i in range(120)]
+    ys_curve = [f(x) for x in xs_curve]
+
     series_func = nr.Series(
-        xs_func,
-        ys_func,
-        label="f(x)",
+        xs=xs_curve,
+        ys=ys_curve,
+        label="f(x) = x^3 + x^2 - 3x - 3",
         color=nr.NRColors.BLUE,
         line_type="solid",
         line_thickness=2.0,
     )
 
+    # Punkt pierwiastka r zaznaczony czerwoną kropką na osi
     series_root = nr.Series(
-        [px],
-        [0.0],
-        label=f"Pierwiastek px={px:.3f}",
+        xs=[root],
+        ys=[0.0],
+        label=f"Pierwiastek r ≈ {root:.4f}",
         color=nr.NRColors.RED,
-        line_type="dotted",
-        line_thickness=5.0,
+        line_thickness=6.0,
     )
 
-    # 4. Generowanie wykresu w stylu nrPlotter
-    # backend="matplotlib" z show=True pozwala na natychmiastowy podgląd w oknie
+    output_file = "bisekcja_rownanie.png"
     nr.plot_series(
         [series_func, series_root],
-        title=f"Bisekcja: px = {px:.3f}",
-        output_path="wykres_bisekcja.png",
+        title=f"Bisekcja: x^3 + x^2 - 3x - 3 = 0 (r ≈ {root:.4f})",
+        output_path=output_file,
         backend="matplotlib",
         show=False,
     )
-    print("Wykres został zapisany do pliku: wykres_bisekcja.png")
+    print(f"\nWykres w stylu nrPlotter zapisano do: {output_file}")
 
 
 if __name__ == "__main__":
